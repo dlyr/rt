@@ -1,4 +1,4 @@
-;;;rt.el -- List available program build from a cmake project
+;;; rt.el -- List available program build from a cmake project
 
 ;; Copyright (C) 2018 David Vanderhaeghe
 
@@ -72,7 +72,7 @@
 	(let ((build (xml-get-children (car project) 'Build)))
 	  (when build
 	    (let ((targets (xml-get-children (car build) 'Target)))
-	      (remove-duplicates (remove nil (mapcar 'rt--get-command-and-dir targets)) :test 'command-and-dir-eq))))))))
+	      (remove-duplicates (remove nil (mapcar 'rt--get-command-and-dir targets)) :test 'rt--command-and-dir-eq))))))))
 
 (defun rt--get-target-list (file)
   "Return the list of executable defined in a cbp FILE."
@@ -106,11 +106,10 @@
   "Run the CMake process for PROJECT-DIR in CMAKE-DIR.  Superseed version for rt package, and CodeBlocks project generation option to have a cbp file."
   (when project-dir
     (let ((default-directory cmake-dir))
-      (cmake-ide--message "Running cmake for src path %s in build path %s" project-dir cmake-dir)
+      (cmake-ide--message "RT Running cmake for src path %s in build path %s param %s" project-dir cmake-dir (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-G CodeBlocks - Unix Makefile" project-dir))
       (apply 'start-process (append (list "cmake" "*cmake*" cmake-ide-cmake-command)
                                     (split-string cmake-ide-cmake-opts)
-                                    (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G CodeBlocks\ -\ Unix\ Makefiles" project-dir))))))
+                                    (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-GCodeBlocks - Unix Makefiles" project-dir))))))
 
 (provide 'rt)
 ;;; rt.el ends here
-
