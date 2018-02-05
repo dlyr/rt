@@ -9,9 +9,70 @@ Add
 ```lisp
 (require 'rt)
 ``` 
-in your emacs config, *after* including `cmake-ide` because one function of `cmake-ide` is redefined in `rt`
+in your `.emacs.el`, *after* including `cmake-ide` because one function of `cmake-ide` is redefined in `rt`
 
 Then launch `rt-exec` and use completion to get the list of executables.
 
 # TODO 
 Use working-dir defined in cbp file to run the executable.
+Add a gud-gdb launcher
+Save last command and add a shortcut to lauch it directly.
+
+# Usefull config
+
+I add the following to my `.emacs.el` to ease the use of `cmake-ide` and `rt`. It allows quick build in release or debug and bind rt-exec to a key contol seq.
+
+```lisp
+(defun set-cmake-opts-build-type (mode)
+  "Switch compile option in OPTS to MODE (i.e Debug or Release)."
+  (interactive)
+  (let ((opts cmake-ide-cmake-opts))
+    
+    (let* ((opts-list (split-string opts))
+	   (clean (delq nil (mapcar (function (lambda (x) (if (string-match-p "CMAKE_BUILD_TYPE" x) 'nil x))) opts-list))))
+      (setq cmake-ide-cmake-opts
+	    (concat (mapconcat 'identity clean " ")  "-DCMAKE_BUILD_TYPE=" mode)))))
+
+(defun compile-in-release ()
+  "Set compil flag and run."
+  (interactive)
+  (progn
+    (let ((buffer (compilation-find-buffer)))
+      (if (get-buffer-process buffer)
+	  (interrupt-process (get-buffer-process buffer))
+	))
+    (set-cmake-opts-build-type "Release")
+    (cmake-ide-run-cmake)
+    (let ((cmake-process (get-process "cmake")))
+      (if cmake-process
+	  (set-process-sentinel (get-process "cmake")
+				(lambda (_process _event)
+				  (cmake-ide-compile)))
+	(cmake-ide-compile)))))
+
+(defun compile-in-debug ()
+  "Set compil flag and run."
+  (interactive)
+  (progn
+    (let ((buffer (compilation-find-buffer)))
+      (if (get-buffer-process buffer)
+	  (interrupt-process (get-buffer-process buffer))
+	))
+    (set-cmake-opts-build-type "Debug")
+    (cmake-ide-run-cmake)
+    (let ((cmake-process (get-process "cmake")))
+      (if cmake-process
+	    (set-process-sentinel (get-process "cmake")
+				  (lambda (_process _event)
+				    (cmake-ide-compile)))
+	  (cmake-ide-compile)
+      ))))
+
+(global-set-key [f6]    'compile-in-debug)
+(global-set-key [f7]    'compile-in-release)
+(global-set-key [f9]    'cmake-ide-compile)
+(global-set-key [M-f9]  'kill-compilation)
+(global-set-key [f8]    'next-error)
+(global-set-key [f10]   'rt-exec)
+
+```
