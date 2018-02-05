@@ -24,7 +24,7 @@ I add the following to my `.emacs.el` to ease the use of `cmake-ide` and `rt`. I
 
 ```lisp
 (defun set-cmake-opts-build-type (mode)
-  "Switch compile option in OPTS to MODE (i.e Debug or Release)."
+  "Switch compile option in 'cmake-ide-cmake-opts to MODE (i.e Debug, Release, RelWithDebInfo)."
   (interactive)
   (let ((opts cmake-ide-cmake-opts))
     
