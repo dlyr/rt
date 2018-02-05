@@ -40,8 +40,12 @@
     (if (file-exists-p exec)
 	(if (file-executable-p exec)
 	    (progn
-	      (setq default-directory wd)
-	      (start-process exec "*run*" exec))
+	      (let ((old-dd default-directory))
+		(setq default-directory wd)
+		(start-process exec"*run*" exec)
+		(display-buffer "*run*")
+		(setq default-directory old-dd))
+	      )
 	  (message "[%s] is not an executable file." exec))
       (message "Executable file not found [%s]." exec))))
 
@@ -106,7 +110,7 @@
   "Run the CMake process for PROJECT-DIR in CMAKE-DIR.  Superseed version for rt package, and CodeBlocks project generation option to have a cbp file."
   (when project-dir
     (let ((default-directory cmake-dir))
-      (cmake-ide--message "RT Running cmake for src path %s in build path %s param %s" project-dir cmake-dir (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-G CodeBlocks - Unix Makefile" project-dir))
+      (cmake-ide--message "RT Running cmake for src path %s in build path %s" project-dir cmake-dir)
       (apply 'start-process (append (list "cmake" "*cmake*" cmake-ide-cmake-command)
                                     (split-string cmake-ide-cmake-opts)
                                     (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-GCodeBlocks - Unix Makefiles" project-dir))))))
