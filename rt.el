@@ -80,7 +80,8 @@
 
 (defun rt--get-target-list (file)
   "Return the list of executable defined in a cbp FILE."
-  (rt--parse-cbp (car (xml-parse-file file))))
+  (when file
+    (rt--parse-cbp (car (xml-parse-file file)))))
   
 (defun rt--run-target (list index)
   "Run a target from LIST whose corresponds to position INDEX."
@@ -88,9 +89,9 @@
     (rt-cd-run (car target) (cadr target))))
 
 (defun rt--get-filename ()
-  "Return the first cbp file found in 'cmake-ide--get-build-dir."
+  "Return the first cbp file found in 'cide--build-dir."
   (interactive)
-  (let ((filenames (file-expand-wildcards  (concatenate 'string (cmake-ide--get-build-dir) "/*.cbp"))))
+  (let ((filenames (file-expand-wildcards  (concatenate 'string (cide--build-dir) "/*.cbp"))))
     (if filenames
 	(progn
 	  (message "found project file [%s]" (car filenames))
@@ -104,13 +105,18 @@
   (interactive
    (list
     (completing-read "Available Targets: " (rt--get-target-list (rt--get-filename)))))
-  (rt-cd-run arg))
-
-(defun cmake-ide--run-cmake-impl (project-dir cmake-dir)
+  ;; get corresponding working directory
+  (let* ((wd (seq-filter (lambda(x) (string= arg (car x))) (rt--get-target-list (rt--get-filename))))
+	 (wd (if wd (cadr (car wd)) nil)))
+    (message "RT wd %s" wd)
+    (when arg
+      (rt-cd-run arg wd))))
+    
+(defun cide--run-cmake-impl (project-dir cmake-dir)
   "Run the CMake process for PROJECT-DIR in CMAKE-DIR.  Superseed version for rt package, and CodeBlocks project generation option to have a cbp file."
   (when project-dir
     (let ((default-directory cmake-dir))
-      (cmake-ide--message "RT Running cmake for src path %s in build path %s" project-dir cmake-dir)
+      (cide--message "RT Running cmake for src path %s in build path %s param %s" project-dir cmake-dir (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-G CodeBlocks - Unix Makefile" project-dir))
       (apply 'start-process (append (list "cmake" "*cmake*" cmake-ide-cmake-command)
                                     (split-string cmake-ide-cmake-opts)
                                     (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-GCodeBlocks - Unix Makefiles" project-dir))))))
