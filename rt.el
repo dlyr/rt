@@ -33,7 +33,7 @@
 (require 'xml)
 (require 'cmake-ide)
 
-(defun rt-cd-run (exec &optional dir)
+(defun rt-cd-run (exec debug &optional dir)
   "Run the 'EXEC program, in 'DIR if provided, or in exec dir."
   (interactive "fExecutable to run:")
   (let ((wd (or dir (file-name-directory exec))))
@@ -42,7 +42,10 @@
 	    (progn
 	      (let ((old-dd default-directory))
 		(setq default-directory wd)
-		(start-process exec"*run*" exec)
+		(if debug
+		    (gdb (concat "gdb -i=mi " exec))
+		  (start-process exec "*run*" exec)
+		  )
 		(display-buffer "*run*")
 		(setq default-directory old-dd))
 	      )
@@ -103,9 +106,23 @@
   ;; get corresponding working directory
   (let* ((wd (seq-filter (lambda(x) (string= arg (car x))) (rt--get-target-list (rt--get-filename))))
 	 (wd (if wd (cadr (car wd)) nil)))
-    (message "RT wd %s" wd)
+    (message "RT working directory %s" wd)
     (when arg
-      (rt-cd-run arg wd))))
+      (rt-cd-run arg nil wd))))
+
+(defun rt-exec-debug(arg)
+  "Prompt the user to give a target name ARG and run it.  Completion use the current cbp file."
+  (interactive
+   (list
+    (completing-read "Available Targets: " (rt--get-target-list (rt--get-filename)))))
+  ;; get corresponding working directory
+  (let* ((wd (seq-filter (lambda(x) (string= arg (car x))) (rt--get-target-list (rt--get-filename))))
+	 (wd (if wd (cadr (car wd)) nil)))
+    (message "RT working directory %s" wd)
+    (when arg
+      (rt-cd-run arg 't wd))))
+    
+
     
 (defun cide--run-cmake-impl (project-dir cmake-dir)
   "Run the CMake process for PROJECT-DIR in CMAKE-DIR.  Superseed version for rt package, and CodeBlocks project generation option to have a cbp file."
