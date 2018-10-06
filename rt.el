@@ -4,7 +4,7 @@
 
 
 ;; Author:  David Vanderhaeghe <github@dlyr.fr>
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires:  ((emacs "25") (cmake-ide "0.6") (xml "?"))
 ;; Keywords: languages
 ;; URL: http://github.com/dlyr/rt
