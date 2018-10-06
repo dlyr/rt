@@ -83,11 +83,6 @@
   (when file
     (rt--parse-cbp (car (xml-parse-file file)))))
   
-(defun rt--run-target (list index)
-  "Run a target from LIST whose corresponds to position INDEX."
-  (let ((target (nth index list)))
-    (rt-cd-run (car target) (cadr target))))
-
 (defun rt--get-filename ()
   "Return the first cbp file found in 'cide--build-dir."
   (interactive)
