@@ -130,7 +130,7 @@
     (let ((default-directory cmake-dir))
       (cide--message "RT Running cmake for src path %s in build path %s param %s" project-dir cmake-dir (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-G CodeBlocks - Unix Makefile" project-dir))
       (apply 'start-process (append (list "cmake" "*cmake*" cmake-ide-cmake-command)
-                                    (split-string cmake-ide-cmake-opts)
+                                    cmake-ide-cmake-args
                                     (list "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-GCodeBlocks - Unix Makefiles" project-dir))))))
 
 (provide 'rt)
