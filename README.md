@@ -20,21 +20,20 @@ Then launch `rt-exec` and use completion to get the list of executables.
 I add the following to my `.emacs.el` to ease the use of `cmake-ide` and `rt`. It allows quick build in release or debug and bind rt-exec to a key contol seq.
 
 ```lisp
-(defun set-cmake-opts-build-type (mode)
-  "Switch compile option in 'cmake-ide-cmake-opts to MODE (i.e Debug, Release, RelWithDebInfo)."
+(defun set-cmake-args-build-type (mode)
+  "Switch compile option in 'cmake-ide-cmake-args to MODE (i.e Debug, Release, RelWithDebInfo)."
   (interactive)
-  (let ((opts cmake-ide-cmake-opts))
+  (let ((args cmake-ide-cmake-args))
     
-    (let* ((opts-list (split-string opts))
-	   (clean (delq nil (mapcar (function (lambda (x) (if (string-match-p "CMAKE_BUILD_TYPE" x) 'nil x))) opts-list))))
-      (setq cmake-ide-cmake-opts
-	    (concat (mapconcat 'identity clean " ")  "-DCMAKE_BUILD_TYPE=" mode)))))
-	    
+    (let* ((clean (delq nil (mapcar (function (lambda (x) (if (string-match-p "CMAKE_BUILD_TYPE" x) 'nil x))) args))))
+      (setq cmake-ide-cmake-args
+	    (cons(concat "-DCMAKE_BUILD_TYPE=" mode) clean)))))
 
 (defun compile-in-release ()
   "Set compil flag and run."
   (interactive)
   (progn
+  (ignore-errors (kill-compilation))
     (let ((comp-proc (get-buffer-process (current-buffer))))
       (if comp-proc
           (if (or (not (eq (process-status comp-proc) 'run))
@@ -44,9 +43,10 @@ I add the following to my `.emacs.el` to ease the use of `cmake-ide` and `rt`. I
                     (sit-for 1)
                     (delete-process comp-proc))
 		  ))))    
-    (set-cmake-opts-build-type "Release")
+    (set-cmake-args-build-type "Release")
     (cmake-ide-run-cmake)    
-    (if (file-exists-p (expand-file-name "compile_commands.json" (projectile-project-root)))
+    (if (or (file-exists-p (expand-file-name "compile_commands.json" (projectile-project-root)))
+	    (file-symlink-p (expand-file-name "compile_commands.json" (projectile-project-root))))
 	(delete-file (expand-file-name "compile_commands.json" (projectile-project-root)))
       )
     (make-symbolic-link (expand-file-name "compile_commands.json" (cide--build-dir)) (projectile-project-root))
@@ -61,6 +61,7 @@ I add the following to my `.emacs.el` to ease the use of `cmake-ide` and `rt`. I
   "Set compil flag and run."
   (interactive)
   (progn
+    (ignore-errors (kill-compilation))   
     (let ((comp-proc (get-buffer-process (current-buffer))))
       (if comp-proc
           (if (or (not (eq (process-status comp-proc) 'run))
@@ -70,9 +71,10 @@ I add the following to my `.emacs.el` to ease the use of `cmake-ide` and `rt`. I
                     (sit-for 1)
                     (delete-process comp-proc))
 		  ))))    
-    (set-cmake-opts-build-type "Debug")
+    (set-cmake-args-build-type "Debug")
     (cmake-ide-run-cmake)
-    (if (file-exists-p (expand-file-name "compile_commands.json" (projectile-project-root)))
+    (if (or (file-exists-p (expand-file-name "compile_commands.json" (projectile-project-root)))
+	    (file-symlink-p (expand-file-name "compile_commands.json" (projectile-project-root))))
 	(delete-file (expand-file-name "compile_commands.json" (projectile-project-root)))
       )
     (make-symbolic-link (expand-file-name "compile_commands.json" (cide--build-dir)) (projectile-project-root))
