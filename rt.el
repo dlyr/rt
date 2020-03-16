@@ -66,7 +66,7 @@
 (defun rt--get-command-and-dir (node)
   "Parse NODE to get the corresponding command and working dir.  Return nil if NODE don't represent a program."
   (let ((type (rt--get-node-attrib-value (xml-get-children node 'Option) 'type)))
-    (when (string-equal type "1")
+    (when (or (string-equal type "1") (string-equal type "0"))
       (let ((command (rt--get-node-attrib-value (xml-get-children node 'Option) 'output))
 	    (working-dir (rt--get-node-attrib-value (xml-get-children node 'Option) 'working_dir)))
 	(list command working-dir)))))
