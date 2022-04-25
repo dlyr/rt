@@ -34,7 +34,7 @@
 (require 'cmake-ide)
 
 (defun rt-cd-run (exec debug &optional dir)
-  "Run the 'EXEC program, if DEBUG if 't run thru gdb, if 'DIR is provided it's the working dir, or in exec dir."
+  "Run the 'EXEC program, if DEBUG is 't run thru gdb, if 'DIR is provided it's the working dir, or in exec dir."
   (interactive "fExecutable to run:")
   (let ((wd (or dir (file-name-directory exec))))
     (if (file-exists-p exec)
