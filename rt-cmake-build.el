@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t -*-
 ;;; rt-cmake-build.el -- List available program build from a cmake project
 
 ;; Copyright (C) 2018-2020 David Vanderhaeghe
@@ -31,10 +32,11 @@
 ;;; Code:
 
 (require 'xml)
+(require 'cl-lib)
 (require 'cmake-build)
 
 (defun rt--get-node-attrib-value (node attr)
-  "Find the first node of NODE list that as the ATTR attribute and return its value."
+  "Return the value of the first node of NODE list that as the ATTR attribute"
   (let ((value (xml-get-attribute-or-nil (car node) attr)))
     (if (and (not value) node)
 	  (rt--get-node-attrib-value (cdr node) attr)
@@ -45,7 +47,9 @@
   (and (equal (car a) (car b)) (equal (cadr a) (cadr b))))
 
 (defun rt--get-command-and-dir (node)
-  "Parse NODE to get the corresponding command and working dir.  Return nil if NODE don't represent a program."
+  "Parse NODE to get the corresponding command and working dir.
+
+  Return nil if NODE don't represent a program."
   (let ((type (rt--get-node-attrib-value (xml-get-children node 'Option) 'type)))
     (when (or (string-equal type "1") (string-equal type "0"))
       (let ((command (rt--get-node-attrib-value (xml-get-children node 'Option) 'output))
@@ -53,14 +57,14 @@
 	(list command working-dir)))))
 
 (defun rt--parse-cbp (node)
-  "Parse NODE, corresponding to a cbp file, and return the list of (exec working_dir)."
+  "Return list of (exec working_dir) from NODE (corresponding to a cbp file)."
   (when (listp node)
     (let ((project (xml-get-children node 'Project)))
       (when project
 	(let ((build (xml-get-children (car project) 'Build)))
 	  (when build
 	    (let ((targets (xml-get-children (car build) 'Target)))
-	      (remove-duplicates (remove nil (mapcar 'rt--get-command-and-dir targets)) :test 'rt--command-and-dir-eq))))))))
+	      (cl-remove-duplicates (remove nil (mapcar 'rt--get-command-and-dir targets)) :test 'rt--command-and-dir-eq))))))))
 
 (defun rt--get-target-list (file)
   "Return the list of executable defined in a cbp FILE."
@@ -68,9 +72,9 @@
     (rt--parse-cbp (car (xml-parse-file file)))))
   
 (defun rt--get-filename ()
-  "Return the first cbp file found in 'cmake-build--get-build-dir."
+  "Return the first cbp file found in \='cmake-build--get-build-dir."
   (cmake-build--save-project-root ()
-  (let ((filenames (file-expand-wildcards  (concatenate 'string (cmake-build--get-build-dir) "/*.cbp"))))
+  (let ((filenames (file-expand-wildcards  (cl-concatenate 'string (cmake-build--get-build-dir) "/*.cbp"))))
     (if filenames
 	(progn
 	  (message "found project file [%s]" (car filenames))
@@ -86,7 +90,9 @@
     ))
 
 (defun rt-run(arg)
-  "Prompt the user to give a target name ARG and run it.  Completion use the current cbp file."
+  "Prompt the user to give a target name ARG and run it.
+
+ Completion use the current cbp file."
   (interactive
    (list
     (completing-read "Available Targets: " (rt--get-target-list (rt--get-filename)))))
@@ -96,7 +102,9 @@
       (cmake-build--invoke-run2 arg wd))))
 
 (defun rt-run-debug(arg)
-  "Prompt the user to give a target name ARG and run it.  Completion use the current cbp file."
+  "Prompt the user to give a target name ARG and run it.
+
+  Completion use the current cbp file."
   (interactive
    (list
     (completing-read "Available Targets: " (rt--get-target-list (rt--get-filename)))))
